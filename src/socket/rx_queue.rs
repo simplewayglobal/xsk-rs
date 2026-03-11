@@ -49,12 +49,16 @@ impl RxQueue {
 
         let mut idx = 0;
 
+        eprintln!("[XDP-DEBUG] consume: calling peek nb={} {}", nb, self.ring.debug_dump());
         let cnt = unsafe { libxdp_sys::xsk_ring_cons__peek(self.ring.as_mut(), nb, &mut idx) };
+        eprintln!("[XDP-DEBUG] consume: peek returned cnt={} idx={}", cnt, idx);
 
         if cnt > 0 {
             for desc in descs.iter_mut().take(cnt as usize) {
+                eprintln!("[XDP-DEBUG] consume: calling rx_desc idx={}", idx);
                 let recv_pkt_desc =
                     unsafe { libxdp_sys::xsk_ring_cons__rx_desc(self.ring.as_ref(), idx) };
+                eprintln!("[XDP-DEBUG] consume: rx_desc returned ptr={:p}", recv_pkt_desc);
 
                 unsafe {
                     desc.addr = (*recv_pkt_desc).addr as usize;
@@ -117,7 +121,10 @@ impl RxQueue {
         poll_timeout: i32,
     ) -> io::Result<usize> {
         match self.poll(poll_timeout)? {
-            true => Ok(unsafe { self.consume(descs) }),
+            true => {
+                eprintln!("[XDP-DEBUG] poll=true: {}", self.ring.debug_dump());
+                Ok(unsafe { self.consume(descs) })
+            }
             false => Ok(0),
         }
     }
@@ -146,6 +153,11 @@ impl RxQueue {
     #[inline]
     pub fn poll(&mut self, poll_timeout: i32) -> io::Result<bool> {
         self.socket.fd.poll_read(poll_timeout)
+    }
+
+    /// Returns true if the underlying ring pointer is null (not yet mmap'd).
+    pub fn is_ring_null(&self) -> bool {
+        self.ring.is_ring_null()
     }
 
     /// A reference to the underlying [`Socket`]'s file descriptor.

@@ -17,6 +17,21 @@ impl XskRingCons {
     pub fn is_ring_null(&self) -> bool {
         self.0.ring.is_null()
     }
+
+    pub fn debug_dump(&self) -> String {
+        format!(
+            "XskRingCons {{ cached_prod={}, cached_cons={}, mask={:#x}, size={}, \
+             producer={:p}, consumer={:p}, ring={:p}, flags={:p} }}",
+            self.0.cached_prod,
+            self.0.cached_cons,
+            self.0.mask,
+            self.0.size,
+            self.0.producer,
+            self.0.consumer,
+            self.0.ring,
+            self.0.flags,
+        )
+    }
 }
 
 impl Default for XskRingCons {
