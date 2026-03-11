@@ -120,8 +120,12 @@ impl RxQueue {
         descs: &mut [FrameDesc],
         poll_timeout: i32,
     ) -> io::Result<usize> {
-        match self.poll(poll_timeout)? {
+        eprintln!("[XDP-DEBUG] calling poll timeout={}", poll_timeout);
+        let poll_result = self.poll(poll_timeout)?;
+        eprintln!("[XDP-DEBUG] poll returned: {}", poll_result);
+        match poll_result {
             true => {
+                eprintln!("[XDP-DEBUG] poll=true (before dump)");
                 eprintln!("[XDP-DEBUG] poll=true: {}", self.ring.debug_dump());
                 Ok(unsafe { self.consume(descs) })
             }
