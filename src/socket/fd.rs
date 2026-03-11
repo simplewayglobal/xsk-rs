@@ -17,7 +17,10 @@ struct PollFd(libc::pollfd);
 impl PollFd {
     #[inline]
     fn poll(&mut self, timeout_ms: i32) -> io::Result<bool> {
+        eprintln!("[XDP-DEBUG] libc::poll fd={} events={:#x} revents={:#x}",
+            self.0.fd, self.0.events, self.0.revents);
         let ret = unsafe { libc::poll(&mut self.0, 1, timeout_ms) };
+        eprintln!("[XDP-DEBUG] libc::poll returned {}", ret);
 
         if ret < 0 {
             if util::get_errno() != EINTR {
